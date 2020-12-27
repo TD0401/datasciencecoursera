@@ -28,10 +28,11 @@ library(rpart)
 library(rpart.plot)
 library(rattle)
 library(randomForest)
+library(gbm)
 set.seed(12345)
 ```
 
-We will download the data and partition it in 70-30% for training set and test set for cross validation purpose.
+We will download the data and partition it in 70-30% for training set and test set for cross validation purpose. 
 ```{r}
 # download the datasets
 training <- read.csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"))
@@ -68,7 +69,7 @@ dim(testSet)
 ```
 
 ## Prediction Model Analysis
-We will use three prediction model techniques and will plot the confusion matrix at the end of each to decide which method best fit. These methods will be - Random Forests, Decision Tress and Generalized  Boosted Model.
+We will use three prediction model techniques and will plot the confusion matrix at the end of each to decide which method  fits best. These methods will be - Random Forests, Decision Tress and Generalized  Boosted Model.
 
 ### a. Random Forest
 ```{r}
@@ -79,7 +80,7 @@ modFitRandForest$finalModel
 
 # prediction on Test dataset
 predictRandForest <- predict(modFitRandForest, newdata=testSet)
-confMatRandForest <- confusionMatrix(predictRandForest, testSet$classe)
+confMatRandForest <- confusionMatrix(predictRandForest, as.factor(testSet$classe))
 confMatRandForest
 
 # plot matrix results
@@ -92,12 +93,12 @@ plot(confMatRandForest$table, col = confMatRandForest$byClass,
 ```{r}
 # model fit
 set.seed(12345)
-modFitDecTree <- rpart(classe ~ ., data=TrainSet, method="class")
+modFitDecTree <- rpart(classe ~ ., data=trainingSet, method="class")
 fancyRpartPlot(modFitDecTree)
 
 # prediction on Test dataset
-predictDecTree <- predict(modFitDecTree, newdata=TestSet, type="class")
-confMatDecTree <- confusionMatrix(predictDecTree, TestSet$classe)
+predictDecTree <- predict(modFitDecTree, newdata=testSet, type="class")
+confMatDecTree <- confusionMatrix(predictDecTree, as.factor(testSet$classe))
 confMatDecTree
 
 # plot matrix results
@@ -111,12 +112,12 @@ plot(confMatDecTree$table, col = confMatDecTree$byClass,
 # model fit
 set.seed(12345)
 controlGBM <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
-modFitGBM  <- train(classe ~ ., data=TrainSet, method = "gbm",trControl = controlGBM, verbose = FALSE)
+modFitGBM  <- train(classe ~ ., data=trainingSet, method = "gbm",trControl = controlGBM, verbose = FALSE)
 modFitGBM$finalModel
 
 # prediction on Test dataset
-predictGBM <- predict(modFitGBM, newdata=TestSet)
-confMatGBM <- confusionMatrix(predictGBM, TestSet$classe)
+predictGBM <- predict(modFitGBM, newdata=testSet)
+confMatGBM <- confusionMatrix(predictGBM, as.factor(testSet$classe))
 confMatGBM
 
 # plot matrix results
@@ -125,12 +126,12 @@ plot(confMatGBM$table, col = confMatGBM$byClass,
 ```
 
 ## Conclusion
-We found that accuracy of the different models are -   
-a. Random Forest - 
-b. Decision Trees - 
-c. Generalized Boosted Model - 
+Since for prediction we have separate dataset, having a 70-30 split is sufficient for training and test data set for cross validation purposes. On applying different prediction models, we found that accuracy of the different models are -   
+a. Random Forest - 99.9%  
+b. Decision Trees - 73.42%  
+c. Generalized Boosted Model - 98.71%  
 
-So we are going to use Random Forest as the accuracy is the maximum.
+So we are going to use Random Forest on our prediction data set as the accuracy is the maximum.
 
 ```{r}
 predictTEST <- predict(modFitRandForest, newdata=predictionTesting)
