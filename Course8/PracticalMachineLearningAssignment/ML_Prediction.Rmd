@@ -1,0 +1,138 @@
+---
+title: "Machine Learning - Prediction Assignment"
+author: "Trina Dey"
+date: "27/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+There are several types of fitness devices like Jawbone Up, Nike FuelBand, Fitbit etc. which collect large amount of movement data using accelerometers. We are using data collected by http://groupware.les.inf.puc-rio.br/har#ixzz3xsbS5bVX on Weight Lifting Exercise Dataset to predict the manner in which they did the exercise. We are going to build a model and cross validate our model against the test data and will also predict use cases for 20 different test scenarios.
+
+## Data Preprocessing
+The training data for this project is available here:  
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv  
+
+The test data for this project is available here:  
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv  
+
+Please note that for simplicity, we have hidden the package loading in the report. However all the required packages have been loaded like knitr, caret, rpart, rattle, randomForest and the seed is set for reproducible analysis.
+
+```{r message= FALSE, include=FALSE}
+library(knitr)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(randomForest)
+set.seed(12345)
+```
+
+We will download the data and partition it in 70-30% for training set and test set for cross validation purpose.
+```{r}
+# download the datasets
+training <- read.csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"))
+predictionTesting  <- read.csv(url("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"))
+
+# create a partition with the training dataset
+inTrain  <- createDataPartition(training$classe, p=0.7, list=FALSE)
+trainingSet <- training[inTrain, ]
+testSet  <- training[-inTrain, ]
+dim(trainingSet)
+dim(testSet)
+```
+
+Next we will clean up the data and remove NAs and Nearly Zero Variance variables
+
+```{r}
+# remove variables with Nearly Zero Variance
+NZV <- nearZeroVar(trainingSet)
+trainingSet <- trainingSet[, -NZV]
+testSet  <- testSet[, -NZV]
+
+# remove variables that are mostly NA
+NAData    <- sapply(trainingSet, function(x) mean(is.na(x))) > 0.95
+trainingSet <- trainingSet[, NAData==FALSE]
+testSet  <- testSet[, NAData==FALSE]
+
+# remove identification only variables (columns 1 to 5)
+trainingSet <- trainingSet[, -(1:5)]
+testSet  <- testSet[, -(1:5)]
+
+dim(trainingSet)
+dim(testSet)
+
+```
+
+## Prediction Model Analysis
+We will use three prediction model techniques and will plot the confusion matrix at the end of each to decide which method best fit. These methods will be - Random Forests, Decision Tress and Generalized  Boosted Model.
+
+### a. Random Forest
+```{r}
+set.seed(12345)
+controlRF <- trainControl(method="cv", number=3, verboseIter=FALSE)
+modFitRandForest <- train(classe ~ ., data=trainingSet, method="rf",trControl=controlRF)
+modFitRandForest$finalModel
+
+# prediction on Test dataset
+predictRandForest <- predict(modFitRandForest, newdata=testSet)
+confMatRandForest <- confusionMatrix(predictRandForest, testSet$classe)
+confMatRandForest
+
+# plot matrix results
+plot(confMatRandForest$table, col = confMatRandForest$byClass, 
+     main = paste("Random Forest - Accuracy =", round(confMatRandForest$overall['Accuracy'], 4)))
+```
+
+
+### b. Decision Tree
+```{r}
+# model fit
+set.seed(12345)
+modFitDecTree <- rpart(classe ~ ., data=TrainSet, method="class")
+fancyRpartPlot(modFitDecTree)
+
+# prediction on Test dataset
+predictDecTree <- predict(modFitDecTree, newdata=TestSet, type="class")
+confMatDecTree <- confusionMatrix(predictDecTree, TestSet$classe)
+confMatDecTree
+
+# plot matrix results
+plot(confMatDecTree$table, col = confMatDecTree$byClass, 
+     main = paste("Decision Tree - Accuracy =",round(confMatDecTree$overall['Accuracy'], 4)))
+```
+
+
+### c. Generalized Boosted Model
+```{r}
+# model fit
+set.seed(12345)
+controlGBM <- trainControl(method = "repeatedcv", number = 5, repeats = 1)
+modFitGBM  <- train(classe ~ ., data=TrainSet, method = "gbm",trControl = controlGBM, verbose = FALSE)
+modFitGBM$finalModel
+
+# prediction on Test dataset
+predictGBM <- predict(modFitGBM, newdata=TestSet)
+confMatGBM <- confusionMatrix(predictGBM, TestSet$classe)
+confMatGBM
+
+# plot matrix results
+plot(confMatGBM$table, col = confMatGBM$byClass, 
+     main = paste("GBM - Accuracy =", round(confMatGBM$overall['Accuracy'], 4)))
+```
+
+## Conclusion
+We found that accuracy of the different models are -   
+a. Random Forest - 
+b. Decision Trees - 
+c. Generalized Boosted Model - 
+
+So we are going to use Random Forest as the accuracy is the maximum.
+
+```{r}
+predictTEST <- predict(modFitRandForest, newdata=predictionTesting)
+predictTEST
+```

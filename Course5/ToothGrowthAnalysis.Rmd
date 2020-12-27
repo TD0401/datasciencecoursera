@@ -1,0 +1,68 @@
+---
+title: "Tooth Growth Analysis"
+author: "Trina Dey"
+date: "11 July 2020"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Overview
+We will analyse the ToothGrowth data which is the effect of Vitamin C on Tooth Growth in Guinea Pigs and compare the growth by different supplement type of Vitamin C (Orange Juice - OJ and Ascorbic Acid - VC) and dose (0.5, 1.0, 2.0 milligrams). We ran the command ?ToothGrowth on terminal to find the details of the dataset.  
+
+ToothGrowth is a data frame with 60 observations on 3 variables.  
+
+[,1]	len	numeric	Tooth length  
+[,2]	supp	factor	Supplement type (VC or OJ).  
+[,3]	dose	numeric	Dose in milligrams/day  
+
+Here is the summary for the data.
+```{r}
+summary(ToothGrowth)
+```
+
+#### Exploratory Analysis
+We will plot a box plot showing the growth of tooth with respect to different supplements and the dosage. This will help us understand how the two supplements are different and provide a visual representation of the variability in the data.
+```{r}
+library(ggplot2)
+ggplot(data = ToothGrowth, aes(dose, len ) ) + 
+  geom_boxplot(mapping=aes(group=dose) ) + 
+  facet_wrap(~ supp, nrow=1) +
+  labs(title="Effect of different supplements of Vitamin C on Tooth Growth in Guinea Pigs")
+```
+From the plot it is very clear that the higher dosage has better effect on length of tooth in both the supplements of Vitamin C. And VC with 2mg has more variability. However, we would like to see which supplement has better effect on the tooth growth. 
+
+#### Hypothesis Testing
+To see which supplement has better effect on the tooth growth, we will create below hypotheis.    
+- H0: Null Hypothesis : Both the supplements has equal effect on the growth  
+- HA: Alternative Hypothesis: There is a measurable difference between the two supplements.  
+
+**Assumptions** : For our Hypothesis Testing we will run T test and will assume the significance level at 5%. Any pvalue with less than 0.05 will make us reject the null hypotheis and accept the alternative hypothesis. Also we are assuming our data is normally distributed, independent and random sample set.
+
+Since we are comparing for inequality, we will perform two sided T tests on difference of OJ and VC data dosage wise.
+```{r message=  FALSE}
+library(dplyr)
+oj_0_5 <- filter(ToothGrowth ,supp=="OJ" , dose==0.5)$len
+vc_0_5 <-filter(ToothGrowth ,supp=="VC" , dose==0.5)$len
+t.test(oj_0_5 - vc_0_5 , paired = FALSE)
+```
+We see that the mean of the difference is more than 0 for different supplements at 0.5 mg. We will repeat the same tests on doses 1mg and 2mg as well.
+
+Test for 1 mg data
+```{r message=  FALSE}
+oj_1 <- filter(ToothGrowth ,supp=="OJ" , dose==1)$len
+vc_1 <-filter(ToothGrowth ,supp=="VC" , dose==1)$len
+t.test(oj_1 - vc_1 , paired = FALSE)
+```
+
+Test for 2 mg data
+```{r message=  FALSE}
+oj_2 <- filter(ToothGrowth ,supp=="OJ" , dose==2)$len
+vc_2 <-filter(ToothGrowth ,supp=="VC" , dose==2)$len
+t.test(oj_2 - vc_2 , paired = FALSE)
+```
+
+#### Conclusion
+Since our assumption was to set significance level at 0.05, we see that the two sided T tests for 0.5, 1, 2 milligrams dose are 0.01547, 0.008229, 0.967. So we conclude -   
+1. With less dosages 0.05 mg and 0.01 mg, our pvalue is less than our significance value and we reject our null hypothesis and accpet our alternative hypothesis. Both types dont have same effect. Our mean is a positive one so we find that Orange Juice performs better than Ascorbic Acid.  
+2. However at higher dosage of 2mg, both Orange Juice and Ascorbic Acid has similar effect on tooth growth.

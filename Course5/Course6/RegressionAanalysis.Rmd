@@ -1,0 +1,113 @@
+---
+title: "Motor Trend Data: How Mileage is impacted by Transmission"
+author: "Trina Dey"
+date: "13/09/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Executive Summary
+We want to analyse the trends in the motor vehicles and looking at the data set of collections of cars, we are interested in exploring the relationship between a set of variables miles per gallon (MPG) as outcome. Primarily, we want to focus on two questions -   
+  1. Is an automatic better than the manual transmission for MPG  
+  2. Quantify the MPG difference between automatica and manual transmission  
+  
+We found out that the Manual Transmission is better than the Automatic Transmission in all cases on an average 2.084 times, the details of which are given below in the report.
+  
+# Exploratory Analysis
+We are looking at mtcars dataset which comprises of 32 observations on 11 numeric variables but we are mainly interested in following -    
+ 1.	mpg	Miles/(US) gallon  
+ 2. cyl	Number of cylinders  
+ 3. disp	Displacement (cu.in.)  
+ 4. hp	Gross horsepower  
+ 5. wt	Weight (1000 lbs)  
+
+Let's look at the summary of the data for mpg wrt to Automatic Transmission vs Manual Transmission.
+
+Summary of Automatic Transmission
+```{r echo =TRUE}
+summary(mtcars[mtcars$am==0,]$mpg)
+```
+
+Summary of Manual Transmission
+```{r echo =TRUE}
+summary(mtcars[mtcars$am==1,]$mpg)
+```
+
+Clearly we can see that the values of MPG for Manual Transmission is higher than the Automatic Transmission. This difference can be seen via a box plot as well.
+
+```{r echo=TRUE}
+boxplot(mpg ~am, data = mtcars, col = c("red","blue"), names=c("Automatic","Manual"),
+        xlab="Transmission type", ylab = "Miles per Gallon", main = "MPG vs Transmission")
+```
+
+# Regression Models
+We are going to consider two regression models based on different predictors.   
+Model 1 - This predicts mpg based on variable am only.  
+Model 2 - This predicts mpg based on variables am, cyl, disp, hp, wt.
+
+We are only going to look at the coefficients - Intercept and Slope. The detailed summary of the models can be found in the appendix section 
+
+### Model 1
+```{r echo=TRUE}
+mdl1 <- lm(mpg~am, data = mtcars)
+coef(mdl1)
+```
+
+Clearly we see the slope to be ```r coef(mdl1)[2]``` that predicts the Manual is better than the Automatic Transmission. Let's look at other models.
+
+### Model 2
+```{r echo=TRUE}
+mdl2 <- lm(mpg~am + cyl + disp + hp + wt, data = mtcars)
+coef(mdl2)
+```
+
+We see that adding more predictors has clearly changed the intercept but the slope isnt varying as much as with predictor am only. The addition of other predictors underfits the model. Also, we can see from the summary of model 2 in appendix that the predictors cyl and disp are less significant. So we are going to remove these predictors from our model and use a model with predictors am, hp and wt only.
+
+### Model 3
+```{r echo=TRUE}
+mdl3 <- lm(mpg~am + wt + hp, data = mtcars)
+coef(mdl3)
+```
+The above model has more significant codes which makes this model better than the model 1 or 2. This can be seen in the summary of model 3 in the appendix section.
+
+# Conclusion
+To conclude, let’s revisit the original two questions:
+
+1. Is an automatic or manual transmission better for MPG?
+As we can see above from the MPG mean and all three regression models that manual transmission is clearly better for MPG than automatic transmission, by varying degrees.
+
+2. Quantify the difference between automatic and manual transmissions.
+Our regression models have quantified how much better manual transmission is than automatic transmission by three different amounts:
+ 
+Slope From Model 1 is ```r coef(mdl1)[2]```  
+Slope From Model 2 is ```r coef(mdl3)[2]```  
+Slope From Model 3 is ```r coef(mdl3)[2]```   
+Since mdl 3 is the most reliable from the three models, we can say with confidence that manual transmission is better than automatic transmission by approximately 2.084 on average. All values in this model are statistically significant and account for ~98% of the variance. Looking at the residual plots (which can be found in the appendix), there does not appear to be any apparent patterns or outliers that create an undue influence on the prediction.
+
+
+# Appendix
+Below are the summary of the three models and some residual plots for the model 3
+
+### Model 1
+```{r echo= FALSE}
+summary(mdl1)
+```
+
+### Model 2
+```{r echo = FALSE}
+summary(mdl2)
+```
+
+### Model 3
+```{r echo =FALSE}
+summary(mdl3)
+```
+
+### Plot for residuals for Model 3
+```{r echo = TRUE}
+par(mfrow = c(2, 2))  
+plot(mdl3)
+```
