@@ -2,7 +2,9 @@
 title: "Machine Learning - Prediction Assignment"
 author: "Trina Dey"
 date: "27/12/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 
