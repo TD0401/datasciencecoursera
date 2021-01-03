@@ -1,0 +1,30 @@
+---
+title: "GVis.Rmd"
+author: "Trina Dey"
+date: "03/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Example
+
+```{r gv, results='asis', cache=TRUE}
+suppressPackageStartupMessages(library(googleVis))
+ M <- gvisMotionChart(Fruits, "Fruit", "Year",options =list(width = "600", height = "400"))
+ print(M,"chart")
+ ##plot(M) wil plot the chart
+```
+
+##Charts in googleVis
+
+<center> "gvis + ChartType" </center>
+
+* MotionCharts `gvisMotionChart`  
+* Interactive maps: `gvisGeoChart`  
+* Interactive tables: `gvisTable`  
+* Line Charts: `gvisLineChart`
+* Bar Charts: `gvisColumnChart`
+* Tree Maps : `gvisTreeMap`
